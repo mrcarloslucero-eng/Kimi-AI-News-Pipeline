@@ -1,0 +1,50 @@
+name: AI News Pipeline
+
+# When this workflow runs
+on:
+  schedule:
+    # Runs every day at 7:00 AM UTC
+    # UTC is 4-8 hours ahead of US timezones, so adjust accordingly:
+    # 7 AM UTC = 3 AM EDT / 12 AM PDT (summer)
+    # 7 AM UTC = 2 AM EST / 11 PM PST (winter)
+    # 
+    # For 7 AM Eastern Time, use: '0 11 * * *' (11 AM UTC)
+    # For 7 AM Pacific Time, use: '0 14 * * *' (2 PM UTC)
+    - cron: '0 11 * * *'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    # Runs on a fresh Ubuntu virtual machine in the cloud
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out your repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Step 3: Install the required Python packages
+      - name: Install dependencies
+        run: |
+          pip install feedparser requests
+
+      # Step 4: Run the script with secrets injected as environment variables
+      - name: Run AI News Pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          AI_PROVIDER: ${{ secrets.AI_PROVIDER }}
+          AI_MODEL: ${{ secrets.AI_MODEL }}
+          HOURS_BACK: ${{ secrets.HOURS_BACK }}
+          MAX_STORIES_PER_CATEGORY: ${{ secrets.MAX_STORIES_PER_CATEGORY }}
+        run: python ai_news_pipeline.py
